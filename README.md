@@ -1,10 +1,14 @@
 # sudoku
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure project to create and solve sudoku programs.
 
 ## Usage
 
-FIXME
+To run do:
+
+```clojure
+lein run [parameter]
+```
 
 ## License
 
