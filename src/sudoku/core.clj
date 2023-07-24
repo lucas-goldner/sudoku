@@ -1,6 +1,7 @@
-(ns sudoku.core)
+(ns sudoku.core
+  (:require [sudoku.generator :as generator]))
 
 (defn -main
-  "I don't do a whole lot."
+  "Generates sudoku of size x"
   [x]
-  (println x "Hello, World!"))
+  (generator/create-sudoku x))
