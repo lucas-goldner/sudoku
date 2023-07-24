@@ -5,6 +5,17 @@
   [x]
   (map (fn [_] (vec (range 1 (inc x)))) (range x)))
 
+(defn transform-sudoku-values-to-strings
+  "Transforms a vector of vectors of integers into a vector of vectors of strings."
+  [data]
+  (mapv #(mapv str %) data))
+
+(defn transform-sudoku-values-to-strings
+  "Transforms a vector of vectors of integers into a vector of vectors of strings."
+  [data]
+  (mapv #(mapv str %) data))
+
+
 (defn print-sudoku
   "Prints a sudoku to the console with indices e.g: A B C for columns and 1 2 3 rows"
   [sudoku]
@@ -25,8 +36,5 @@
   (-> x
       Integer/parseInt
       create-sudoku-rows
+      transform-sudoku-values-to-strings
       print-sudoku))
-
-
-
-
