@@ -5,7 +5,6 @@
   [x]
   (map (fn [_] (vec (range 1 (inc x)))) (range x)))
 
-
 (defn print-sudoku
   "Prints a sudoku to the console with indices e.g: A B C for columns and 1 2 3 rows"
   [sudoku]
@@ -23,8 +22,10 @@
 (defn create-sudoku
   "Creates a sudoku of size x by gradually expanding the sudoku vector"
   [x]
-  (let [sudoku (vec (create-sudoku-rows (Integer/parseInt x)))]
-    (print-sudoku sudoku)))
+  (-> x
+      Integer/parseInt
+      create-sudoku-rows
+      print-sudoku))
 
 
 
