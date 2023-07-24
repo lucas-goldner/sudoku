@@ -1,24 +1,21 @@
-(ns sudoku.generator)
+(ns sudoku.generator
+  (:require [clojure.core.matrix :as m]))
 
-(defn create-sudoku-rows
-  "Creates a vector of x rows, each containing numbers from 1 to x"
-  [x]
-  (map (fn [_] (vec (range 1 (inc x)))) (range x)))
-
-(defn transform-sudoku-values-to-strings
-  "Transforms a vector of vectors of integers into a vector of vectors of strings."
-  [data]
-  (mapv #(mapv str %) data))
-
-(defn transform-sudoku-values-to-strings
-  "Transforms a vector of vectors of integers into a vector of vectors of strings."
-  [data]
-  (mapv #(mapv str %) data))
+(defn base-sudoku []
+  "Returns a valid solved 9x9 sudoku puzzle."
+  [[7 3 5 6 1 3 8 9 2]
+   [8 4 2 9 7 3 5 6 1]
+   [9 6 1 2 8 5 3 7 4]
+   [2 8 6 3 4 9 1 5 7]
+   [4 1 3 8 5 7 9 2 6]
+   [5 7 9 1 2 6 4 3 8]
+   [1 5 7 4 9 2 6 8 3]
+   [6 9 4 7 3 8 2 1 5]
+   [3 2 8 5 6 1 7 4 9]])
 
 
-(defn print-sudoku
+(defn print-sudoku [sudoku]
   "Prints a sudoku to the console with indices e.g: A B C for columns and 1 2 3 rows"
-  [sudoku]
   (let [num-cols (count (first sudoku))]
     (print "   ")
     (doseq [col-label (range 1 (inc num-cols))]
@@ -30,11 +27,28 @@
         (print cell " "))
       (println))))
 
-(defn create-sudoku
-  "Creates a sudoku of size x by gradually expanding the sudoku vector"
-  [x]
-  (-> x
-      Integer/parseInt
-      create-sudoku-rows
-      transform-sudoku-values-to-strings
+(defn get-3x3-blocks [sudoku]
+  "Returns blocks of 3x3 from the given sudoku."
+  (let [blocks (partition 3 (map (partial partition 3) sudoku))]
+    (apply concat (map #(mapv vec %) blocks))))
+
+(defn shuffle-row-blocks [sudoku]
+  "Shuffles the row-blocks of the sudoku while maintaining its validity."
+  (let [blocks (partition 3 (map (partial partition 3) sudoku))
+        shuffled-blocks (->> blocks
+                             (shuffle)
+                             (get-3x3-blocks))]
+    shuffled-blocks))
+
+(defn transform-sudoku [sudoku]
+  (let [blocks (partition 3 sudoku)]
+    (->> (reverse blocks)
+         (mapv #(apply concat %))
+         (mapv #(->> % (partition 3) (mapv (apply concat %)))))))
+
+(defn create-sudoku [x]
+  "Generates and prints a valid shuffled 9x9 sudoku."
+  (-> (base-sudoku)
+      shuffle-row-blocks
+      transform-sudoku
       print-sudoku))
