@@ -1,0 +1,149 @@
+(ns sudoku.core
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.java.jdbc.sql :as sql]))
+
+;; Sudoku Board Data Structure
+(defn create-board []
+  (vec (repeat 9 (vec (repeat 9 nil)))))
+
+(defn display-board [board]
+  (doseq [row board]
+    (println (interpose " | " row))
+    (println (apply str (repeat (* 4 9) "-")))
+    ))
+
+(defn get-cell [board row col]
+  (get-in board [row col]))
+
+(defn set-cell [board row col value]
+  (assoc-in board [row col] value))
+
+;; Sudoku Generation Algorithm
+(defn- valid-value? [board row col value]
+  (let [row-values (get board row)
+        column-values (mapv #(get % col) board)
+        square-values (->> [(quot row 3) (quot col 3)]
+                          (mapv #(* % 3))
+                          (apply cartesian-product)
+                          (mapv #(get-in board %)))]
+    (not-any? #{value} (concat row-values column-values square-values))))
+
+(defn- find-empty-cell [board]
+  (first (filter #(nil? (get-cell board %1 %2)) (cartesian-product (range 9) (range 9)))))
+
+(defn generate-board []
+  (let [board (create-board)]
+    (loop [board board]
+      (if-let [[row col] (find-empty-cell board)]
+        (let [valid-values (shuffle (range 1 10))
+              value (first (filter #(valid-value? board row col %) valid-values))
+              updated-board (if value
+                              (set-cell board row col value)
+                              (recur (assoc-in board [row col] nil)))]
+          (recur updated-board))
+        board))))
+
+(defn remove-cells [board num-cells]
+  (let [empty-board (loop [board board n num-cells]
+                      (if (zero? n)
+                        board
+                        (let [[row col] (rand-nth (filter #(not (nil? (get-cell board %1 %2))) (cartesian-product (range 9) (range 9))))]
+                          (recur (set-cell board row col nil) (dec n)))))]
+    empty-board))
+
+(defn generate-puzzle [num-cells]
+  (let [complete-board (generate-board)]
+    (remove-cells complete-board num-cells)))
+
+
+
+
+;;Console based:
+
+(defn get-user-input [prompt]
+  (print prompt)
+  (read-line))
+
+(defn parse-coordinate [input]
+  (let [[row-str col-str] (re-find #"(\d)\s*(\d)" input)]
+    [(Integer/parseInt row-str) (Integer/parseInt col-str)]))
+
+(defn parse-value [input]
+  (Integer/parseInt input))
+
+(defn valid-move? [board row col value]
+  (and (>= row 0) (< row 9)
+       (>= col 0) (< col 9)
+       (nil? (get-cell board row col))
+       (valid-value? board row col value)))
+
+(defn update-board [board row col value]
+  (set-cell board row col value))
+
+(defn game-loop [board]
+  (display-board board)
+  (let [input (get-user-input "Enter your move (row col value): ")
+        [row col] (parse-coordinate input)
+        value (parse-value (last (clojure.string/split input #"\s+")))]
+    (if (valid-move? board row col value)
+      (let [updated-board (update-board board row col value)]
+        (if (solved? updated-board)
+          (do (display-board updated-board)
+              (println "Congratulations! You solved the puzzle!"))
+          (recur updated-board)))
+      (do (println "Invalid move. Please try again.")
+          (recur board)))))
+
+(defn start-game [num-cells]
+  (let [board (generate-puzzle num-cells)]
+    (println "Welcome to Sudoku!")
+    (loop [board board]
+      (game-loop board))))
+
+
+;;Timer and Stats
+
+
+(defonce game-stats (atom {:games-played 0
+                           :easy {:duration 0 :count 0}
+                           :medium {:duration 0 :count 0}
+                           :hard {:duration 0 :count 0}}))
+
+(defn update-stats [difficulty duration]
+  (swap! game-stats update-in [difficulty :duration] + duration)
+  (swap! game-stats update-in [difficulty :count] inc))
+
+(defn display-stats []
+  (println "Game Statistics:")
+  (let [games-played (:games-played @game-stats)]
+    (if (zero? games-played)
+      (println "No games played yet.")
+      (doseq [[difficulty {:keys [duration count]}] (dissoc @game-stats :games-played)]
+        (println (str "Difficulty: " difficulty))
+        (println (str "Total Games Played: " count))
+        (println (str "Average Duration: " (/ duration count)))
+        (println)))))
+
+
+;;SQL Database Integration:
+
+(def db-spec {:classname "org.postgresql.Driver"
+              :subprotocol "postgresql"
+              :subname "//localhost/sudoku"
+              :user "username"
+              :password "password"})
+
+(defn create-table []
+  (jdbc/db-do-commands db-spec
+    (sql/create-table :sudoku-game
+                      [:id "SERIAL PRIMARY KEY"]
+                      [:difficulty "VARCHAR(255)"]
+                      [:duration "BIGINT"]
+                      [:timestamp "TIMESTAMP"])))
+
+(defn save-game [difficulty duration]
+  (jdbc/insert! db-spec
+    :sudoku-game
+    {:difficulty difficulty
+     :duration duration
+     :timestamp (java.util.Date.)}))
