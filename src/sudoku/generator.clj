@@ -1,10 +1,9 @@
 (ns sudoku.generator)
 
-(defn create-sudoku-row
-  "Creates a sudoku row of index x and adds it to the sudoku vector of vectors"
-  [sudoku x]
-  (println (format "This number was passed: %s" x))
-  (conj sudoku (vec (range 1 (inc x)))))
+(defn create-sudoku-rows
+  "Creates a vector of x rows, each containing numbers from 1 to x"
+  [x]
+  (map (fn [_] (vec (range 1 (inc x)))) (range x)))
 
 
 (defn print-sudoku "Prints a sudoku to the console"
@@ -17,11 +16,8 @@
 (defn create-sudoku
   "Creates a sudoku of size x by gradually expanding the sudoku vector"
   [x]
-  (let [initial-sudoku (vec [])]
-    (doseq [i (range 1 (inc (Integer/parseInt x)))]
-      (create-sudoku-row initial-sudoku i)
-      (when (= i 3)
-        (print-sudoku initial-sudoku)))))
+  (let [sudoku (vec (create-sudoku-rows (Integer/parseInt x)))]
+    (print-sudoku sudoku)))
 
 
 
