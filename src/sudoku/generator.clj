@@ -21,9 +21,8 @@
   "Replaces some values in each row of the Sudoku grid with random zeros."
   (if (= index size-of-sudoku)
     grid
-    (do
-      (let [row (nth grid index)]
-        (replace-rows-with-zeros (assoc grid index (randomize-row-with-zeros row)) (inc index) size-of-sudoku)))))
+    (let [row (nth grid index)]
+      (replace-rows-with-zeros (assoc grid index (randomize-row-with-zeros row)) (inc index) size-of-sudoku))))
 
 
 (defn create-sudoku [x]
