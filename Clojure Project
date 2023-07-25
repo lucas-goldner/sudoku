@@ -1,149 +1,87 @@
-(ns sudoku.core
-  (:require [clojure.java.jdbc :as jdbc]
-            [clojure.java.jdbc.sql :as sql]))
+(ns sudoku.core)
 
-;; Sudoku Board Data Structure
-(defn create-board []
-  (vec (repeat 9 (vec (repeat 9 nil)))))
+(defn random-generator [num]
+  (inc (rand-int num)))
 
-(defn display-board [board]
-  (doseq [row board]
-    (println (interpose " | " row))
-    (println (apply str (repeat (* 4 9) "-")))
-    ))
+(defn un-used-in-box [mat row-start col-start num]
+  (let [srn (int (Math/sqrt (count mat)))]
+    (every? #(not= num %) (for [i (range srn)
+                                j (range srn)]
+                            (get-in mat [(+ row-start i) (+ col-start j)])))))
 
-(defn get-cell [board row col]
-  (get-in board [row col]))
+(defn fill-box [mat row col]
+  (let [n (count mat)
+        srn (int (Math/sqrt n))]
+    (doseq [i (range srn)
+            j (range srn)]
+      (loop [num (random-generator n)]
+        (if-not (un-used-in-box mat row col num)
+          (recur (random-generator n))
+          (assoc-in mat [(+ row i) (+ col j)] num))))))
 
-(defn set-cell [board row col value]
-  (assoc-in board [row col] value))
+(defn check-if-safe [mat i j num]
+  (let [n (count mat)
+        srn (int (Math/sqrt n))]
+    (and (every? #(not= num %) (get mat i))
+         (every? #(not= num %) (map #(get % j) mat))
+         (un-used-in-box mat (- i (mod i srn)) (- j (mod j srn)) num))))
 
-;; Sudoku Generation Algorithm
-(defn- valid-value? [board row col value]
-  (let [row-values (get board row)
-        column-values (mapv #(get % col) board)
-        square-values (->> [(quot row 3) (quot col 3)]
-                          (mapv #(* % 3))
-                          (apply cartesian-product)
-                          (mapv #(get-in board %)))]
-    (not-any? #{value} (concat row-values column-values square-values))))
+(defn fill-remaining [mat i j]
+  (let [n (count mat)
+        srn (int (Math/sqrt n))]
+    (if (>= j n)
+      (recur (inc i) 0)
+      (if (>= i n)
+        true
+        (if (< i srn)
+          (if (< j srn)
+            (recur i srn)
+            (recur i (inc j)))
+          (if (< i (- n srn))
+            (if (= j (* srn (quot i srn)))
+              (recur i (inc j))
+              (recur i j))
+            (if (= j (- n srn))
+              (recur (inc i) 0)
+              (loop [num 1]
+                (if (<= num n)
+                  (if (check-if-safe mat i j num)
+                    (do
+                      (assoc-in mat [i j] num)
+                      (if (recur i (inc j))
+                        true
+                        (assoc-in mat [i j] 0)))
+                    (recur (inc num)))
+                  false))))))))
 
-(defn- find-empty-cell [board]
-  (first (filter #(nil? (get-cell board %1 %2)) (cartesian-product (range 9) (range 9)))))
+(defn remove-k-digits [mat k]
+  (let [n (count mat)]
+    (loop [count k]
+      (if (zero? count)
+        mat
+        (let [cell-id (dec (random-generator (* n n)))
+              i (quot cell-id n)
+              j (mod cell-id n)]
+          (if (not= (get-in mat [i j]) 0)
+            (recur (dec count))
+            (recur count))))))
 
-(defn generate-board []
-  (let [board (create-board)]
-    (loop [board board]
-      (if-let [[row col] (find-empty-cell board)]
-        (let [valid-values (shuffle (range 1 10))
-              value (first (filter #(valid-value? board row col %) valid-values))
-              updated-board (if value
-                              (set-cell board row col value)
-                              (recur (assoc-in board [row col] nil)))]
-          (recur updated-board))
-        board))))
+(defn print-sudoku [mat]
+  (doseq [row mat]
+    (println (clojure.string/join " " row)))
+  (println))
 
-(defn remove-cells [board num-cells]
-  (let [empty-board (loop [board board n num-cells]
-                      (if (zero? n)
-                        board
-                        (let [[row col] (rand-nth (filter #(not (nil? (get-cell board %1 %2))) (cartesian-product (range 9) (range 9))))]
-                          (recur (set-cell board row col nil) (dec n)))))]
-    empty-board))
+(defn fill-values [n k]
+  (let [srn (int (Math/sqrt n))
+        mat (vec (repeat n (vec (repeat n 0))))]
+    (doseq [i (range 0 n srn)
+            j (range 0 n srn)]
+      (fill-box mat i j))
+    (fill-remaining mat 0 srn)
+    (print-sudoku mat)
+    (remove-k-digits mat k)))
 
-(defn generate-puzzle [num-cells]
-  (let [complete-board (generate-board)]
-    (remove-cells complete-board num-cells)))
-
-
-
-
-;;Console based:
-
-(defn get-user-input [prompt]
-  (print prompt)
-  (read-line))
-
-(defn parse-coordinate [input]
-  (let [[row-str col-str] (re-find #"(\d)\s*(\d)" input)]
-    [(Integer/parseInt row-str) (Integer/parseInt col-str)]))
-
-(defn parse-value [input]
-  (Integer/parseInt input))
-
-(defn valid-move? [board row col value]
-  (and (>= row 0) (< row 9)
-       (>= col 0) (< col 9)
-       (nil? (get-cell board row col))
-       (valid-value? board row col value)))
-
-(defn update-board [board row col value]
-  (set-cell board row col value))
-
-(defn game-loop [board]
-  (display-board board)
-  (let [input (get-user-input "Enter your move (row col value): ")
-        [row col] (parse-coordinate input)
-        value (parse-value (last (clojure.string/split input #"\s+")))]
-    (if (valid-move? board row col value)
-      (let [updated-board (update-board board row col value)]
-        (if (solved? updated-board)
-          (do (display-board updated-board)
-              (println "Congratulations! You solved the puzzle!"))
-          (recur updated-board)))
-      (do (println "Invalid move. Please try again.")
-          (recur board)))))
-
-(defn start-game [num-cells]
-  (let [board (generate-puzzle num-cells)]
-    (println "Welcome to Sudoku!")
-    (loop [board board]
-      (game-loop board))))
-
-
-;;Timer and Stats
-
-
-(defonce game-stats (atom {:games-played 0
-                           :easy {:duration 0 :count 0}
-                           :medium {:duration 0 :count 0}
-                           :hard {:duration 0 :count 0}}))
-
-(defn update-stats [difficulty duration]
-  (swap! game-stats update-in [difficulty :duration] + duration)
-  (swap! game-stats update-in [difficulty :count] inc))
-
-(defn display-stats []
-  (println "Game Statistics:")
-  (let [games-played (:games-played @game-stats)]
-    (if (zero? games-played)
-      (println "No games played yet.")
-      (doseq [[difficulty {:keys [duration count]}] (dissoc @game-stats :games-played)]
-        (println (str "Difficulty: " difficulty))
-        (println (str "Total Games Played: " count))
-        (println (str "Average Duration: " (/ duration count)))
-        (println)))))
-
-
-;;SQL Database Integration:
-
-(def db-spec {:classname "org.postgresql.Driver"
-              :subprotocol "postgresql"
-              :subname "//localhost/sudoku"
-              :user "username"
-              :password "password"})
-
-(defn create-table []
-  (jdbc/db-do-commands db-spec
-    (sql/create-table :sudoku-game
-                      [:id "SERIAL PRIMARY KEY"]
-                      [:difficulty "VARCHAR(255)"]
-                      [:duration "BIGINT"]
-                      [:timestamp "TIMESTAMP"])))
-
-(defn save-game [difficulty duration]
-  (jdbc/insert! db-spec
-    :sudoku-game
-    {:difficulty difficulty
-     :duration duration
-     :timestamp (java.util.Date.)}))
+(defn -main []
+  (let [n 9
+        k 20]
+    (fill-values n k)))
