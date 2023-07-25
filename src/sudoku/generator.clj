@@ -1,8 +1,6 @@
 (ns sudoku.generator
   (:require [sudoku.collection :as collection]))
 
-(def num-blanks 30)
-
 (defn print-sudoku [sudoku]
   "Prints a sudoku to the console with indices e.g: A B C for columns and 1 2 3 rows"
   (let [num-cols (count (first sudoku))]
@@ -16,15 +14,20 @@
         (print cell " "))
       (println))))
 
-(defn replace-with-random-zero [grid index size-of-sudoku]
+(defn randomize-row-with-zeros [vector]
+  (mapv #(if (< (rand) 0.6) 0 %) vector))
+
+(defn replace-rows-with-zeros [grid index size-of-sudoku]
   "Replaces some values in each row of the Sudoku grid with random zeros."
   (if (= index size-of-sudoku)
-    (println size-of-sudoku)
-    ((println index) (replace-with-random-zero grid (inc index) size-of-sudoku))))
+    grid
+    (do
+      (let [row (nth grid index)]
+        (replace-rows-with-zeros (assoc grid index (randomize-row-with-zeros row)) (inc index) size-of-sudoku)))))
 
 
 (defn create-sudoku [x]
   "Generates and prints a valid shuffled 9x9 sudoku."
   (-> (collection/get-random-collection x)
-      (replace-with-random-zero 0 (Integer/parseInt x))
+      (replace-rows-with-zeros 0 (Integer/parseInt x))
       print-sudoku))
