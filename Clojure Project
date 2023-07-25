@@ -81,7 +81,14 @@
     (print-sudoku mat)
     (remove-k-digits mat k)))
 
+(defn validate-grid-size [n]
+  (let [sqrt-n (Math/sqrt n)]
+    (and (integer? sqrt-n)
+         (zero? (mod n sqrt-n)))))
+
 (defn -main []
   (let [n 9
         k 20]
-    (fill-values n k)))
+    (if (validate-grid-size n)
+      (fill-values n k)
+      (println "Invalid grid size. Please enter a perfect square number."))))
