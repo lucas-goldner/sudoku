@@ -5,19 +5,23 @@
 
 (defn un-used-in-box [mat row-start col-start num]
   (let [srn (int (Math/sqrt (count mat)))]
-    (every? #(not= num %) (for [i (range srn)
-                                j (range srn)]
-                            (get-in mat [(+ row-start i) (+ col-start j)])))))
+    (every? #(not= num %) (for [i (range srn) j (range srn)] (get-in mat [(+ row-start i) (+ col-start j)])))))
 
 (defn fill-box [mat row col]
   (let [n (count mat)
         srn (int (Math/sqrt n))]
-    (doseq [i (range srn)
-            j (range srn)]
-      (loop [num (random-generator n)]
-        (if-not (un-used-in-box mat row col num)
-          (recur (random-generator n))
-          (assoc-in mat [(+ row i) (+ col j)] num))))))
+    (let [nums (shuffle (range 1 (inc n)))
+          i (rand-int srn)
+          j (rand-int srn)
+          new-row (+ row i)
+          new-col (+ col j)]
+      (loop [nums nums]
+        (if (empty? nums)
+          mat
+          (let [num (first nums)]
+            (if (un-used-in-box mat row col num)
+              (recur (rest nums))
+              (recur nums))))))))
 
 (defn check-if-safe [mat i j num]
   (let [n (count mat)
@@ -26,33 +30,37 @@
          (every? #(not= num %) (map #(get % j) mat))
          (un-used-in-box mat (- i (mod i srn)) (- j (mod j srn)) num))))
 
-(defn fill-remaining [mat i j]
+(defn fill-remaining-helper [mat i j]
   (let [n (count mat)
         srn (int (Math/sqrt n))]
     (if (>= j n)
-      (recur (inc i) 0)
+      (fill-remaining-helper mat (inc i) 0)
       (if (>= i n)
         true
         (if (< i srn)
           (if (< j srn)
-            (recur i srn)
-            (recur i (inc j)))
+            (fill-remaining-helper mat i srn)
+            (fill-remaining-helper mat i (inc j)))
           (if (< i (- n srn))
             (if (= j (* srn (quot i srn)))
-              (recur i (inc j))
-              (recur i j))
+              (fill-remaining-helper mat i (inc j))
+              (fill-remaining-helper mat i j))
             (if (= j (- n srn))
-              (recur (inc i) 0)
-              (loop [num 1]
-                (if (<= num n)
-                  (if (check-if-safe mat i j num)
-                    (do
-                      (assoc-in mat [i j] num)
-                      (if (recur i (inc j))
-                        true
-                        (assoc-in mat [i j] 0)))
-                    (recur (inc num)))
-                  false))))))))
+              (fill-remaining-helper mat (inc i) 0)
+              (let [nums (range 1 (inc n))]
+                (some #(let [num %]
+                         (if (check-if-safe mat i j num)
+                           (do
+                             (assoc-in mat [i j] num)
+                             (if (fill-remaining-helper mat i (inc j))
+                               true
+                               (do
+                                 (assoc-in mat [i j] 0)
+                                 false)))
+                           false) nums))))))))))
+
+(defn fill-remaining [mat i j]
+  (fill-remaining-helper mat i j))
 
 (defn remove-k-digits [mat k]
   (let [n (count mat)]
@@ -62,9 +70,9 @@
         (let [cell-id (dec (random-generator (* n n)))
               i (quot cell-id n)
               j (mod cell-id n)]
-          (if (not= (get-in mat [i j]) 0)
+          (if (not= 0 (get-in mat [i j]))
             (recur (dec count))
-            (recur count))))))
+            (recur count)))))))
 
 (defn print-sudoku [mat]
   (doseq [row mat]
@@ -74,21 +82,17 @@
 (defn fill-values [n k]
   (let [srn (int (Math/sqrt n))
         mat (vec (repeat n (vec (repeat n 0))))]
-    (doseq [i (range 0 n srn)
-            j (range 0 n srn)]
+    (doseq [i (for [x (range 0 n) :when (zero? (mod x srn))] x)
+            j (for [x (range 0 n) :when (zero? (mod x srn))] x)]
       (fill-box mat i j))
     (fill-remaining mat 0 srn)
-    (print-sudoku mat)
-    (remove-k-digits mat k)))
-
-(defn validate-grid-size [n]
-  (let [sqrt-n (Math/sqrt n)]
-    (and (integer? sqrt-n)
-         (zero? (mod n sqrt-n)))))
+    (remove-k-digits mat k)
+    mat))
 
 (defn -main []
   (let [n 9
-        k 20]
-    (if (validate-grid-size n)
-      (fill-values n k)
-      (println "Invalid grid size. Please enter a perfect square number."))))
+        k 20
+        sudoku (fill-values n k)]
+    (print-sudoku sudoku)))
+
+(-main)
