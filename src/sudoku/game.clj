@@ -29,12 +29,22 @@
         y (dec (Integer/parseInt (subs location 1 2)))]
     (assoc sudoku y (assoc (nth sudoku y) x input))))
 
+(defn has-zero?
+  "Checks if any value in the vector of vectors is zero."
+  [matrix]
+  (some #(some zero? %) matrix))
+
 (defn process-sudoku [sudoku]
   (let [[location value] (input/wait-for-sudoku-input)]
-    (if (= location "finish")
-      (do
-        (println "Done")
-        sudoku)
-      (do
-        (println "You entered:" location value)
-        (enter-input-to-sudoku sudoku location value)))))
+    (let [updated-sudoku (enter-input-to-sudoku sudoku location value)]
+      (if (not (has-zero? updated-sudoku))
+        (do
+          (print-sudoku updated-sudoku)
+          :finished)
+        (do
+          (println "You entered:" location value)
+          (print-sudoku updated-sudoku)
+          (recur updated-sudoku))))))
+
+(defn finish-sudoku [sudoku]
+  (println "Finished sudoku"))
