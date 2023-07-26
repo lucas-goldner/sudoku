@@ -25,10 +25,9 @@
 (defn enter-input-to-sudoku
   "Enters a new value into the sudoku"
   [sudoku location input]
-  (let [x (convert-letter-to-number (subs location 0 1))
-        y (Integer/parseInt (subs location 1 2))]
-    (assoc-in sudoku [x y] input)))
-
+  (let [x (dec (convert-letter-to-number (subs location 0 1)))
+        y (dec (Integer/parseInt (subs location 1 2)))]
+    (assoc sudoku y (assoc (nth sudoku y) x input))))
 
 (defn process-sudoku [sudoku]
   (let [[location value] (input/wait-for-sudoku-input)]
@@ -38,6 +37,4 @@
         sudoku)
       (do
         (println "You entered:" location value)
-        (let [updated-sudoku (enter-input-to-sudoku sudoku location value)]
-          (print-sudoku updated-sudoku)
-          (recur updated-sudoku))))))
+        (enter-input-to-sudoku sudoku location value)))))
