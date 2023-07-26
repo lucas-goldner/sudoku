@@ -5,7 +5,7 @@
             [sudoku.dbj :as db]
             [sudoku.input :as input]))
 
-(defn vec->pg-array [v]
+(defn vec->str [v]
   (str "{" (str/join "," (map #(str "{" (str/join "," %) "}") v)) "}"))
 
 (defn str->vec [s]
@@ -15,7 +15,7 @@
       (edn/read-string)))
 
 (defn create-entry [data]
-  (jdbc/insert! db/database :sudoku {:data (vec->pg-array (:data data))}))
+  (jdbc/insert! db/database :sudoku {:data (vec->str (:data data))}))
 
 (defn retrieve-all []
   (let [rows (jdbc/query db/database ["SELECT * from sudoku"])]
