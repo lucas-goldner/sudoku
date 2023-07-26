@@ -63,8 +63,9 @@
    [6 3 1 7 2 4 8 5]
    [2 4 8 3 6 5 1 7]])
 
-(defn get-random-collection [x]
+(defn get-random-collection
   "Returns a random collection from the given options."
+  [x]
   (let [random-sudoku (if (= (Integer/parseInt x) 8)
                         (rand-nth [sudoku-8-1
                                    sudoku-8-2

@@ -11,3 +11,11 @@
   []
   (println "To starting a new sudoku: sudoku")
   (read-line))
+
+(defn wait-for-sudoku-input
+  "Asks for sudoku input"
+  []
+  (println "Enter the location you want to enter a value e.g: A1, C4 and then enter the desired number")
+  (let [location (read-line)
+        value (Integer. (read-line))]
+    [location value]))
