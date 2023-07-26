@@ -1,21 +1,7 @@
 (ns sudoku.game
   (:require [sudoku.input :as input]
             [sudoku.collection :as collection]
-            [sudoku.game :as game]
             [sudoku.crud :as crud]))
-
-(defn print-sudoku "Prints a sudoku to the console with indices e.g: A B C for columns and 1 2 3 rows"
-  [sudoku]
-  (let [num-cols (count (first sudoku))]
-    (print "   ")
-    (doseq [col-label (range 1 (inc num-cols))]
-      (print (char (+ 64 col-label)) " "))
-    (println)
-    (doseq [[row-label row] (map vector (range 1 (inc (count sudoku))) sudoku)]
-      (print row-label " ")
-      (doseq [cell row]
-        (print cell " "))
-      (println))))
 
 (defn convert-letter-to-number
   "Converts a letter to the corresponding number, e.g., A -> 1, B -> 2, etc."
@@ -42,11 +28,11 @@
     (let [updated-sudoku (enter-input-to-sudoku sudoku location value)]
       (if (not (has-zero? updated-sudoku))
         (do
-          (print-sudoku updated-sudoku)
+          (input/print-sudoku updated-sudoku)
           [updated-sudoku :finished])
         (do
           (println "You entered:" location value)
-          (print-sudoku updated-sudoku)
+          (input/print-sudoku updated-sudoku)
           (recur updated-sudoku))))))
 
 (defn compare-rows "Compare each rows to make sure they are equal"
