@@ -10,7 +10,7 @@ For this project a postgres database is needed:
 $ docker run  --name my-postgres-container --env POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 --detach postgres
 $ docker run -it --rm --link my-postgres-container:postgres postgres psql -h postgres -U postgres
 # Inside of psql run then to create the database
-$ CREATE TABLE public.sudoku (id serial PRIMARY KEY, detail varchar);
+$ CREATE TABLE sudoku (id SERIAL PRIMARY KEY, data VARCHAR(255) NOT NULL);
 ```
 
 ```clojure

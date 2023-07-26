@@ -1,7 +1,8 @@
 (ns sudoku.game
   (:require [sudoku.input :as input]
             [sudoku.collection :as collection]
-            [sudoku.game :as game]))
+            [sudoku.game :as game]
+            [sudoku.crud :as crud]))
 
 (defn print-sudoku "Prints a sudoku to the console with indices e.g: A B C for columns and 1 2 3 rows"
   [sudoku]
@@ -68,6 +69,11 @@
   (println "Finished sudoku")
   (println "Checking results...")
   (if (compare-sudokus sudoku (collection/get-collections-for-size (count (nth sudoku 0))) 0)
-    (println "Correct congratulations")
+    (do
+      (println "Correct congratulations")
+      (println "Saving sudoku into database")
+      (crud/create-entry {:data sudoku})
+      (println "Saved will close program now")
+      (System/exit 0))
     (println "You failed"))
   sudoku)
