@@ -14,12 +14,12 @@ $ CREATE TABLE sudoku (id SERIAL PRIMARY KEY, data VARCHAR(255) NOT NULL);
 ```
 
 ```clojure
-$ lein run [parameter]
+$ lein run
 ```
 
 ## License
 
-Copyright © 2023 FIXME
+Copyright © 2023 Lucas Goldner & Flora Maushake
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at
