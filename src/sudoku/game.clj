@@ -1,5 +1,7 @@
 (ns sudoku.game
-  (:require [sudoku.input :as input]))
+  (:require [sudoku.input :as input]
+            [sudoku.collection :as collection]
+            [sudoku.game :as game]))
 
 (defn print-sudoku "Prints a sudoku to the console with indices e.g: A B C for columns and 1 2 3 rows"
   [sudoku]
@@ -46,5 +48,28 @@
           (print-sudoku updated-sudoku)
           (recur updated-sudoku))))))
 
+(defn compare-rows "Compare each rows to make sure they are equal"
+  [sudoku result-sudoku index max-size]
+  (if (= index max-size)
+    true
+    (if (= (nth sudoku index) (nth result-sudoku index))
+      (compare-rows sudoku result-sudoku (inc index) max-size)
+      false)))
+
+(defn compare-sudokus "Compare each sudokus to make sure they are equal"
+  [sudoku result-sudokus sudoku-index]
+  (println "Run compare sudokus")
+  (println (compare-rows sudoku (nth result-sudokus sudoku-index) 0 (count sudoku)))
+  (if (= sudoku-index (count result-sudokus))
+    false
+    (if (compare-rows sudoku (nth result-sudokus sudoku-index) 0 (count sudoku))
+      true
+      (compare-sudokus sudoku result-sudokus (inc sudoku-index)))))
+
 (defn finish-sudoku [sudoku]
-  (println "Finished sudoku"))
+  (println "Finished sudoku")
+  (println "Checking results...")
+  (if (compare-sudokus sudoku (collection/get-collections-for-size (count (nth sudoku 0))) 0)
+    (println "Correct congratulations")
+    (println "You failed"))
+  sudoku)
