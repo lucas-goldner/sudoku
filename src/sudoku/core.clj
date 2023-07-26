@@ -12,13 +12,12 @@
               (let [sudoku (generator/create-sudoku (input/ask-for-sudoku-size))]
                 (println "Initial sudoku:")
                 (game/print-sudoku sudoku)
-                (println "Please complete the sudoku by enter your number at the 0s")
+                (println "Please complete the sudoku by entering your number at the 0s")
                 (loop [sudoku sudoku]
-                  (loop [sudoku sudoku]
-                    (let [updated-sudoku (game/process-sudoku sudoku)]
-                      (if (= updated-sudoku :finished)
-                        (game/finish-sudoku sudoku)
-                        (do
-                          (println "Updated sudoku:")
-                          (game/print-sudoku updated-sudoku)
-                          (recur updated-sudoku))))))))))
+                  (let [[updated-sudoku status] (game/process-sudoku sudoku)]
+                    (if (= status :finished)
+                      (game/finish-sudoku updated-sudoku)
+                      (do
+                        (println "Updated sudoku:")
+                        (game/print-sudoku updated-sudoku)
+                        (recur updated-sudoku)))))))))

@@ -42,7 +42,7 @@
       (if (not (has-zero? updated-sudoku))
         (do
           (print-sudoku updated-sudoku)
-          :finished)
+          [updated-sudoku :finished])
         (do
           (println "You entered:" location value)
           (print-sudoku updated-sudoku)
@@ -58,8 +58,6 @@
 
 (defn compare-sudokus "Compare each sudokus to make sure they are equal"
   [sudoku result-sudokus sudoku-index]
-  (println "Run compare sudokus")
-  (println (compare-rows sudoku (nth result-sudokus sudoku-index) 0 (count sudoku)))
   (if (= sudoku-index (count result-sudokus))
     false
     (if (compare-rows sudoku (nth result-sudokus sudoku-index) 0 (count sudoku))
