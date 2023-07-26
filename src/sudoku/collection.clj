@@ -63,14 +63,36 @@
    [6 3 1 7 2 4 8 5]
    [2 4 8 3 6 5 1 7]])
 
+(def sudoku-4-1
+  [[1 2 3 4]
+   [3 4 1 2]
+   [2 1 4 3]
+   [4 3 2 1]])
+
+(def sudoku-4-2
+  [[1 2 4 3]
+   [3 4 2 1]
+   [2 1 3 4]
+   [4 3 1 2]])
+
+(def sudoku-4-3
+  [[1 2 3 4]
+   [4 3 2 1]
+   [3 1 4 2]
+   [2 4 1 3]])
+
 (defn get-random-collection
   "Returns a random collection from the given options."
   [x]
-  (let [random-sudoku (if (= (Integer/parseInt x) 8)
-                        (rand-nth [sudoku-8-1
-                                   sudoku-8-2
-                                   sudoku-8-3])
-                        (rand-nth [sudoku-9-1
-                                   sudoku-9-2
-                                   sudoku-9-3]))]
+  (let [random-sudoku (case (Integer/parseInt x)
+                        4 (rand-nth [sudoku-4-1
+                                     sudoku-4-2
+                                     sudoku-4-3])
+                        8 (rand-nth [sudoku-8-1
+                                     sudoku-8-2
+                                     sudoku-8-3])
+                        9 (rand-nth [sudoku-9-1
+                                     sudoku-9-2
+                                     sudoku-9-3])
+                        (throw (IllegalArgumentException. "Invalid size input")))]
     random-sudoku))

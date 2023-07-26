@@ -12,7 +12,7 @@
       (replace-rows-with-zeros (assoc grid index (randomize-row-with-zeros row)) (inc index) size-of-sudoku))))
 
 
-(defn create-sudoku "Generates and prints a valid shuffled 9x9 sudoku."
+(defn create-sudoku "Generates a randomized sudoku."
   [x]
   (let [sudoku-with-zeros (-> (collection/get-random-collection x)
                               (replace-rows-with-zeros 0 (Integer/parseInt x)))]

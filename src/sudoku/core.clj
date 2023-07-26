@@ -8,11 +8,12 @@
   []
   (case (input/explain-inputs)
     "read" (println "Implement read old entries")
-    "sudoku" ((println "Enter the size of your sudoku. E.g. 8 or 9")
+    "sudoku" ((println "Enter the size of your sudoku. Available sizes: 4, 8 or 9")
               (let [sudoku (generator/create-sudoku (input/ask-for-sudoku-size))]
                 (println "You can always enter 'finish' to finish the sudoku")
-                (println "Initial sudoku")
+                (println "Initial sudoku:")
                 (game/print-sudoku sudoku)
+                (println "Please complete the sudoku by enter your number at the 0s")
                 (loop [sudoku sudoku]
                   (let [updated-sudoku (game/process-sudoku sudoku)]
                     (println "Updated sudoku:")
