@@ -4,10 +4,17 @@ A Clojure project to create and solve sudoku programs.
 
 ## Usage
 
-To run do:
+For this project a postgres database is needed:
+
+```bash
+$ docker run  --name my-postgres-container --env POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 --detach postgres
+$ docker run -it --rm --link my-postgres-container:postgres postgres psql -h postgres -U postgres
+# Inside of psql run then to create the database
+$ CREATE TABLE public.sudoku (id serial PRIMARY KEY, detail varchar);
+```
 
 ```clojure
-lein run [parameter]
+$ lein run [parameter]
 ```
 
 ## License
