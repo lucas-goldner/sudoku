@@ -1,6 +1,14 @@
-(ns sudoku.core)
+(ns sudoku.core
+  (:require [sudoku.crud :as crud]))
+
+(defn start []
+  (try
+    (crud/create-entry {:detail "new entry"})
+    (println (crud/retrieve-all))
+    (catch Exception e
+      (println "An error occurred:" (.getMessage e)))))
 
 (defn -main
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+  "Manages a database."
+  [& args]
+  (start))
